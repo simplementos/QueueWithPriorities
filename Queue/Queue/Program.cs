@@ -1,91 +1,59 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace Queue
 {
     class Program
     {
-static        Random rand = new Random();
-
-        static async Task Foo(CancellationToken token)
+        static Random rand = new Random();
+        
+        static void Test()
         {
-            for(int i = 0; i < 1000; i++)
+            var queue = new QueueWithPriorities<char>();
+
+            for (var i = 0; i < 20; i++)
             {
-                Console.WriteLine(i);
-                await Task.Delay(1000, token);
-                token.ThrowIfCancellationRequested();
+                var item = (char)rand.Next(50, 80);
+                var priority = rand.Next(1, 6);
+                queue.Enqueue(item, priority);
             }
-        }
-        static void Main(string[] args)
-        {
-            QueueWithPriorities<int> queue = new QueueWithPriorities<int>();
-            List<Tuple<int, int>> ss = new List<Tuple<int, int>>(); int yy = 2;
-            for (var i = 0; i < 1233; i++)
-            {
-                int t1 = rand.Next(1, 2), t2 = rand.Next(1, 22);
-            
-              queue.Enqueue(t1, t2);
-                if (t2 >= 17) queue.Dequeue();
-             
-                ss.Add(Tuple.Create(t1, t2));
-             }
-            int y = 0;
 
-            var queue2 = new QueueWithPriorities<int>();
-             foreach (var item in queue)
+            Console.WriteLine("Items in queue:");
+            for (var k = 0; k < queue.Count(); k++)
             {
-                Console.WriteLine(ss[y] +   "      " +  item); 
-                y++;
+                if (k == queue.Count() / 2) Console.WriteLine(); ;
+                Console.Write(queue[k] + "  ");
             }
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Dequeue();
-            queue.Dequeue();
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1); queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue();
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1); queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1);
-            queue.Enqueue(12, 1); queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue(); queue.Dequeue(); queue.Dequeue();
-            queue.Dequeue();
-            queue.Enqueue(12, 1);
+            Console.WriteLine($"Count of items: { queue.Count() }");
 
+            Console.WriteLine(new string('-', 30));
 
+            Console.WriteLine("Dequeuing some items with priority 3:");
+            Console.WriteLine(new string('-', 30));
 
-            Console.WriteLine(queue.Count());  //    for (int i = 0; i < 23; i++) queue.Dequeue(13);
-            Console.WriteLine(queue._queuesCounts.Sum());
+            while (queue.IsSuchPriorityInQueue(3))
+            {
+                Console.WriteLine($"Dequeuing item: { queue.Dequeue(3) }  ");
+            }
 
+            Console.WriteLine(new string('-', 30));
+            Console.WriteLine("Items in queue after dequeuing:");
+            for (var k = 0; k < queue.Count(); k++)
+            {
+                if (k == queue.Count() / 2) Console.WriteLine(); ;
+                Console.Write(queue[k] + "  ");
+            }
+            Console.WriteLine($"\n\nCount of items: { queue.Count() }");
+
+            Console.WriteLine($"\nPeek of queue: { queue.Peek() }");
 
             Console.ReadKey();
+        }
+ 
+        static void Main(string[] args)
+        {
+            Test();
         }
     }
 }
