@@ -10,13 +10,13 @@ namespace Queue
     class QueueWithPriorities<T> : IEnumerable<Tuple<T, int>>
     {
         private Tuple<T, int>[] _queues;
-        private int[] _queuesCounts;
+        public int[] _queuesCounts;
         private int _count;
         private int _capasity;
 
         public Tuple<T, int> this[int index]
         {
-             get
+            get
             {
                 if (index < 0 || index >= _count)
                 {
@@ -24,18 +24,22 @@ namespace Queue
                 }
                 return _queues[index];
             }
-        
+
         }
 
         public int Count => _count;
 
         public bool Empty => (_count == 0) ? true : false;
 
-        public int GetMaxPriority() => _queues.Where(q => q != null).Select(q => q.Item2).Max();                
+        public int GetMaxPriority() => _queues.Where(q => q != null).Select(q => q.Item2).Max();
 
+        public bool IsSuchPriorityInQueue(int priority) => (_queues.Where(q => (q != null) && (q.Item2 == priority)).Count() > 0) ? true : false;
+        
         public void Enqueue(T item, int priority)
         {
-            if (priority <= 0 || priority > GetMaxPriority()) throw new ArgumentException($" '{ nameof(priority) }' must be more than zero and less then the max queue priority.");
+            if (priority <= 0)
+            throw new ArgumentException($" '{ nameof(priority) }' must be more than zero.");
+           
             if (_count == _capasity)
             {
                 _capasity *= 2;
@@ -46,24 +50,21 @@ namespace Queue
             int nextPosition = _queuesCounts.Take(priority).Sum();
 
             if (_queues[nextPosition] != null)
-            {          
+            {
                 var temp = new Tuple<T, int>[_capasity];
                 Array.Copy(_queues, temp, _count);
                 for (var i = nextPosition; i < _capasity - 1; i++)
                 {
                     temp[i + 1] = _queues[i];
                 }
-         
+
                 _queues = temp;
             }
-            _queues[nextPosition] = Tuple.Create(item, priority);
-
-            //_queues[_count++] = Tuple.Create(item, priority);
-
-            int y = GetMaxPriority();
+            _queues[nextPosition] = Tuple.Create(item, priority);       
+            
             if (priority > _queuesCounts.Length)
             {
-                var pTemp = new int[_queuesCounts.Length * 2];
+                var pTemp = new int[priority * 2];
                 Array.Copy(_queuesCounts, pTemp, _queuesCounts.Length);
                 _queuesCounts = pTemp;
             }
@@ -72,11 +73,35 @@ namespace Queue
             _count++;
         }
 
+
+        public Tuple<T, int> Dequeue(int priority)
+        {
+            if (_count == 0) throw new InvalidOperationException("Queue is empty.");
+            if ((priority <= 0) || !IsSuchPriorityInQueue(priority))
+                throw new ArgumentException($" '{ nameof(priority) }' must be more than zero. Also the item with such priority must exist."); 
+
+            var temp = new Tuple<T, int>[_capasity];           
+
+            for (var i = _queuesCounts.Take(priority - 1).Sum(); i < _count - 1; i++)
+            {
+                temp[i] = _queues[i + 1];
+            }
+            Tuple<T, int> returnValue = _queues[_queuesCounts.Take(priority - 1).Sum()];
+            _queues = temp;
+
+            _queuesCounts[priority - 1]--;
+            _count--;
+
+            return returnValue;
+        }
+
         public Tuple<T, int> Dequeue()
         {
             if (_count == 0) throw new InvalidOperationException("Queue is empty.");
 
-            var temp = new Tuple<T, int>[_capasity];
+            _queuesCounts[_queues[0].Item2 - 1]--;
+
+            var temp = new Tuple<T, int>[_capasity];         
 
             for (var i = 0; i < _count - 1; i++)
             {
@@ -84,31 +109,26 @@ namespace Queue
             }
             Tuple<T, int> returnValue = _queues[0];
             _queues = temp;
-            return returnValue;
-        }
-
-        public Tuple<T, int> Dequeue(int priority)
-        {
-            if (_count ==   0) throw new InvalidOperationException("Queue is empty.");
-            if (priority <= 0 || priority > GetMaxPriority()) throw new ArgumentException($" '{ nameof(priority) }' must be more than zero and less then the max queue priority.");
-            var temp = new Tuple<T, int>[_capasity];
-
-            for (var i = 0; i < _count - 1; i++)
-            {
-                temp[i] = _queues[i + 1];
-            }
-            Tuple<T, int> returnValue = _queues[0];
-            _queues = temp;
+          
+            _count--;
 
             return returnValue;
         }
 
         public Tuple<T, int> Peek(int priority = 1)
         {
-            if (_count ==   0) throw new InvalidOperationException("Queue is empty.");
-            if (priority <= 0 || priority > GetMaxPriority()) throw new ArgumentException($" '{ nameof(priority) }' must be more than zero and less then the max queue priority.");
-            int d = _queuesCounts.Take(priority - 1).Sum();
-            return _queues[_queuesCounts.Take(priority - 1).Sum()];   
+            if (_count == 0) throw new InvalidOperationException("Queue is empty.");
+            if ((priority <= 0) || !IsSuchPriorityInQueue(priority))
+                throw new ArgumentException($" '{ nameof(priority) }' must be more than zero. Also the item with such priority must exist.");
+
+            return _queues[_queuesCounts.Take(priority - 1).Sum()];
+        }
+
+        public Tuple<T, int> Peek()
+        {
+            if (_count == 0) throw new InvalidOperationException("Queue is empty.");        
+               
+            return _queues[0];
         }
 
         public IEnumerator<Tuple<T, int>> GetEnumerator()
